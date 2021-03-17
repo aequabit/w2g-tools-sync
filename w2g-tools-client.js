@@ -176,16 +176,29 @@
     setTimeout(() => {
         // Create scroll down control
         const menu = document.querySelectorAll(".w2g-menu")[3];
+
+        const scrollUpButton = document.createElement("div");
+        scrollUpButton.className = "mod_pl_interaction";
+        scrollUpButton.setAttribute("title", "Skip to top");
+        scrollUpButton.onclick = () => {
+            const list = document.querySelector("div.w2g-list-items.w2g-items.w2g-scroll-vertical");
+            list.scrollTop = 0;
+        };
+        const upIcon = document.createElement("i");
+        upIcon.className = "chevron up icon";
+        scrollUpButton.appendChild(upIcon);
+
         const scrollDownButton = document.createElement("div");
         scrollDownButton.className = "mod_pl_interaction";
-        scrollDownButton.setAttribute("title", "Skip to bottom");
         scrollDownButton.onclick = () => {
             const list = document.querySelector("div.w2g-list-items.w2g-items.w2g-scroll-vertical");
             list.scrollTop = list.scrollHeight;
         };
-        const icon = document.createElement("i");
-        icon.className = "chevron down icon";
-        scrollDownButton.appendChild(icon);
+        const downIcon = document.createElement("i");
+        downIcon.className = "chevron down icon";
+        scrollDownButton.appendChild(downIcon);
+
+        menu.appendChild(scrollUpButton);
         menu.appendChild(scrollDownButton);
 
         const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
