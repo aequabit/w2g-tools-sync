@@ -3,7 +3,8 @@
 ## Installation
 - Deploy to www root
 - Give read/write permissions to `data/`
-- Set a token in `index.php` and token and URL in `w2g-tools-client.js`
+- Set a token in `index.php`
+- Set the server URL and token under the `Sync` tab in the watch2gether sidebar
 - Install Tampermonkey and distribute the script and token to your friends!
 
 ## Bugs / features
