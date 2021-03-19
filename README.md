@@ -1,5 +1,10 @@
 # watch2gether Tools Sync Server
 
+## Features
+- Buttons to skip to the top/bottom of a playlist
+- Renaming videos added by direct URL (start with http:// or https://)
+- Syncs in real-time with users that have the Tampermonkey script installed
+
 ## Installation
 - Deploy `sync-server/` to www root
 - Give read/write permissions to `data/`
