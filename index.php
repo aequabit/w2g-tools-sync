@@ -6,24 +6,28 @@ require_once __DIR__ . "/lib/w2g-tools-sync-server.php";
 const AUTH_TOKEN = "<redacted>";
 const STORAGE_FILE = __DIR__ . "/data/sync-storage.json";
 
+// CORS fuckery
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: x-sync-token");
+if ($_SERVER['REQUEST_METHOD'] === "OPTIONS") {
+     die();
+}
 
 // create storage and server
 $storage_provider = new \w2gtools\sync\json_storage_provider(STORAGE_FILE);
 $server = new \w2gtools\sync\sync_server($storage_provider);
 
-// TODO: fixme
-// if (!array_key_exists("HTTP_X_SYNC_TOKEN", $_SERVER)) {
-//     http_response_code(400);
-//     die(json_encode([ "error" => "MISSING_TOKEN" ]));
-// }
+if (!array_key_exists("HTTP_X_SYNC_TOKEN", $_SERVER)) {
+    http_response_code(400);
+    die(json_encode([ "error" => "MISSING_TOKEN" ]));
+}
 
-// $token = $_SERVER["HTTP_X_SYNC_TOKEN"];
-// if ($token !== AUTH_TOKEN) {
-//     http_response_code(401);
-//     die(json_encode(["error" => "INCORRECT_TOKEN"]));
-// }
+$token = $_SERVER["HTTP_X_SYNC_TOKEN"];
+if ($token !== AUTH_TOKEN) {
+    http_response_code(401);
+    die(json_encode(["error" => "INCORRECT_TOKEN"]));
+}
 
 // parse request
 $uri = $_SERVER["REQUEST_URI"];
