@@ -7,8 +7,9 @@
 // @grant        unsafeWindow
 // ==/UserScript==
 
-namespace w2g.sync {
+namespace w2gsync {
     export type result<t = void> = Promise<t>;
+    export const result = Promise;
     export interface kv_pair { [key: string]: string };
 
     export class helper {
@@ -101,16 +102,16 @@ namespace w2g.sync {
             const originalTitle = playlistVideo.getAttribute("w2g-original-title") || titleElement.innerText;
             playlistVideo.setAttribute("w2g-original-title", originalTitle);
 
-            const customTitleKey = Object.keys(w2g.sync.state_container.state.titles).find(x => x === originalTitle);
+            const customTitleKey = Object.keys(w2gsync.state_container.state.titles || {}).find(x => x === originalTitle);
             if (customTitleKey === undefined)
                 continue;
 
-            titleElement.innerText = w2g.sync.state_container.state.titles[customTitleKey];
+            titleElement.innerText = w2gsync.state_container.state.titles[customTitleKey];
         }
     };
 
     const renameVideo = (playlistVideo, title) => {
-        if (w2g.sync.helper.is_url(title)) {
+        if (w2gsync.helper.is_url(title)) {
             alert("retard alert");
             return;
         }
@@ -124,20 +125,20 @@ namespace w2g.sync {
         if (title.length === 0)
             title = originalTitle;
 
-        w2g.sync.state_container.state.titles[originalTitle] = title;
+        w2gsync.state_container.state.titles[originalTitle] = title;
 
         titleElement.innerText = title;
 
-        w2g.sync.api_client.set_title(originalTitle, title)
+        w2gsync.api_client.set_title(originalTitle, title)
             .catch(err => {
                 alert("Failed to rename video: " + err.message + "\nEdit sync settings to retry");
-                w2g.sync.state_container.state.abort = true;
+                w2gsync.state_container.state.abort = true;
             });
     };
 
     const createEditControls = playlistVideos => {
         for (const playlistVideo of playlistVideos) {
-            if (!w2g.sync.internal.is_video_editable(playlistVideo))
+            if (!w2gsync.internal.is_video_editable(playlistVideo))
                 continue;
 
             const titleElement = playlistVideo.querySelector(".w2g-list-item-title.mod-player");
@@ -194,7 +195,7 @@ namespace w2g.sync {
     };
 
     const setRemoveHandler = () => {
-        for (const deleteButton of document.querySelectorAll(".ui.remove.icon[title='Delete']")) {
+        for (const deleteButton of document.querySelectorAll(".ui.remove.icon[title='Delete']") as any) {
             (deleteButton as any).onclick = e => {
                 setTimeout(() => {
                     const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
@@ -210,10 +211,10 @@ namespace w2g.sync {
     };
 
     try {
-        w2g.sync.state_container.state.titles = await w2g.sync.api_client.get_titles();
+        w2gsync.state_container.state.titles = await w2gsync.api_client.get_titles();
     } catch (err) {
         alert("Failed to get titles: " + err.message + "\nEdit sync settings to retry");
-        w2g.sync.state_container.state.abort = true;
+        w2gsync.state_container.state.abort = true;
     }
 
     // ghetto retard shit
@@ -277,16 +278,23 @@ namespace w2g.sync {
         const contentRight = document.querySelector(".w2g-content-right");
         contentRight.appendChild(syncMenuTab);
 
-        (document.querySelector("#w2g-sync-server-url") as any).value = w2g.sync.client_storage.get("server-url") || "";
-        (document.querySelector("#w2g-sync-server-token") as any).value = w2g.sync.client_storage.get("server-token") || "";
+        (document.querySelector("#w2g-sync-server-url") as any).value = w2gsync.client_storage.get("server-url") || "";
+        (document.querySelector("#w2g-sync-server-token") as any).value = w2gsync.client_storage.get("server-token") || "";
 
         const saveButton = document.querySelector("#w2g-sync-server-save");
-        (saveButton as any).onclick = () => {
+        (saveButton as any).onclick = async () => {
             const serverUrl = document.querySelector("#w2g-sync-server-url") as any;
             const serverToken = document.querySelector("#w2g-sync-server-token") as any;
-            w2g.sync.client_storage.set("server-url", serverUrl.value);
-            w2g.sync.client_storage.set("server-token", serverToken.value);
-            w2g.sync.state_container.state.abort = false;
+            w2gsync.client_storage.set("server-url", serverUrl.value);
+            w2gsync.client_storage.set("server-token", serverToken.value);
+            w2gsync.state_container.state.abort = false;
+            
+            try {
+                w2gsync.state_container.state.titles = await w2gsync.api_client.get_titles();
+            } catch (err) {
+                alert("Failed to get titles: " + err.message + "\nEdit sync settings to retry");
+                w2gsync.state_container.state.abort = true;
+            }
         };
 
         const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
@@ -296,15 +304,23 @@ namespace w2g.sync {
         setRemoveHandler();
 
         setInterval(() => {
-            if (w2g.sync.state_container.state.abort) return;
+            if (w2gsync.state_container.state.abort) return;
 
-            w2g.sync.api_client.get_titles()
-                .then(titles => w2g.sync.state_container.state.titles = titles)
+            w2gsync.api_client.get_titles()
+                .then(titles => w2gsync.state_container.state.titles = titles)
                 .catch(err => {
                     alert("Failed to get titles: " + err.message + "\nEdit sync settings to retry");
-                    w2g.sync.state_container.state.abort = true;
+                    w2gsync.state_container.state.abort = true;
                 });
         }, 5000);
+
+        // setInterval(() => {
+        //     const ok_button = document.querySelector("#ok_button");
+        //     console.log(ok_button)
+        //     if (ok_button !== null) {
+        //         (ok_button as any).click();
+        //     }
+        // }, 150);
 
         setInterval(() => {
             const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");

@@ -54,115 +54,114 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var _this = this;
-var w2g;
-(function (w2g) {
-    var sync;
-    (function (sync) {
-        ;
-        var helper = /** @class */ (function () {
-            function helper() {
-            }
-            helper.is_url = function (str) {
-                return typeof str === "string" && (str.startsWith("http://") || str.startsWith("https://"));
-            };
-            return helper;
-        }());
-        sync.helper = helper;
-        sync.default_state = function () { return ({ titles: {}, abort: false }); };
-        var state_container = /** @class */ (function () {
-            function state_container() {
-            }
-            state_container.state = sync.default_state();
-            return state_container;
-        }());
-        sync.state_container = state_container;
-        var client_storage = /** @class */ (function () {
-            function client_storage() {
-            }
-            client_storage.get = function (key) {
-                return localStorage.getItem(client_storage.STORAGE_PREFIX + key);
-            };
-            client_storage.set = function (key, value) {
-                localStorage.setItem(client_storage.STORAGE_PREFIX + key, value.toString());
-            };
-            client_storage.STORAGE_PREFIX = "_w2g-sync-";
-            return client_storage;
-        }());
-        sync.client_storage = client_storage;
-        function http_request(url, query) {
-            if (query === void 0) { query = null; }
-            return __awaiter(this, void 0, void 0, function () {
-                var sync_server_url, sync_server_token, response, err_1;
+var w2gsync;
+(function (w2gsync) {
+    w2gsync.result = Promise;
+    ;
+    var helper = /** @class */ (function () {
+        function helper() {
+        }
+        helper.is_url = function (str) {
+            return typeof str === "string" && (str.startsWith("http://") || str.startsWith("https://"));
+        };
+        return helper;
+    }());
+    w2gsync.helper = helper;
+    w2gsync.default_state = function () { return ({ titles: {}, abort: false }); };
+    var state_container = /** @class */ (function () {
+        function state_container() {
+        }
+        state_container.state = w2gsync.default_state();
+        return state_container;
+    }());
+    w2gsync.state_container = state_container;
+    var client_storage = /** @class */ (function () {
+        function client_storage() {
+        }
+        client_storage.get = function (key) {
+            return localStorage.getItem(client_storage.STORAGE_PREFIX + key);
+        };
+        client_storage.set = function (key, value) {
+            localStorage.setItem(client_storage.STORAGE_PREFIX + key, value.toString());
+        };
+        client_storage.STORAGE_PREFIX = "_w2g-sync-";
+        return client_storage;
+    }());
+    w2gsync.client_storage = client_storage;
+    function http_request(url, query) {
+        if (query === void 0) { query = null; }
+        return __awaiter(this, void 0, w2gsync.result, function () {
+            var sync_server_url, sync_server_token, response, err_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        sync_server_url = client_storage.get("server-url");
+                        sync_server_token = client_storage.get("server-token");
+                        if (sync_server_url === null || sync_server_token === null)
+                            throw new Error("Sync server not configured");
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, , 5]);
+                        return [4 /*yield*/, fetch(sync_server_url + url + (query !== null ? "?" + new URLSearchParams(query) : ""), {
+                                method: 'GET',
+                                headers: __assign({ 'x-sync-token': sync_server_token }, (query !== null ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}))
+                            })];
+                    case 2:
+                        response = _a.sent();
+                        return [4 /*yield*/, response.json()];
+                    case 3: return [2 /*return*/, _a.sent()];
+                    case 4:
+                        err_1 = _a.sent();
+                        throw new Error("Request failed: " + err_1.message);
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
+    }
+    w2gsync.http_request = http_request;
+    var api_client = /** @class */ (function () {
+        function api_client() {
+        }
+        api_client.get_titles = function () {
+            return __awaiter(this, void 0, w2gsync.result, function () {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0:
-                            sync_server_url = client_storage.get("server-url");
-                            sync_server_token = client_storage.get("server-token");
-                            if (sync_server_url === null || sync_server_token === null)
-                                throw new Error("Sync server not configured");
-                            _a.label = 1;
-                        case 1:
-                            _a.trys.push([1, 4, , 5]);
-                            return [4 /*yield*/, fetch(sync_server_url + url + (query !== null ? "?" + new URLSearchParams(query) : ""), {
-                                    method: 'GET',
-                                    headers: __assign({ 'x-sync-token': sync_server_token }, (query !== null ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}))
-                                })];
-                        case 2:
-                            response = _a.sent();
-                            return [4 /*yield*/, response.json()];
-                        case 3: return [2 /*return*/, _a.sent()];
-                        case 4:
-                            err_1 = _a.sent();
-                            throw new Error("Request failed: " + err_1.message);
-                        case 5: return [2 /*return*/];
+                        case 0: return [4 /*yield*/, http_request("/playlist/get-titles")];
+                        case 1: return [2 /*return*/, (_a.sent()).titles];
                     }
                 });
             });
+        };
+        api_client.set_title = function (url, title) {
+            return __awaiter(this, void 0, w2gsync.result, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, http_request("/playlist/set-title", { url: url, title: title })];
+                        case 1: return [2 /*return*/, _a.sent()];
+                    }
+                });
+            });
+        };
+        return api_client;
+    }());
+    w2gsync.api_client = api_client;
+    var internal = /** @class */ (function () {
+        function internal() {
         }
-        sync.http_request = http_request;
-        var api_client = /** @class */ (function () {
-            function api_client() {
-            }
-            api_client.get_titles = function () {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, http_request("/playlist/get-titles")];
-                            case 1: return [2 /*return*/, (_a.sent()).titles];
-                        }
-                    });
-                });
-            };
-            api_client.set_title = function (url, title) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, http_request("/playlist/set-title", { url: url, title: title })];
-                            case 1: return [2 /*return*/, _a.sent()];
-                        }
-                    });
-                });
-            };
-            return api_client;
-        }());
-        sync.api_client = api_client;
-        var internal = /** @class */ (function () {
-            function internal() {
-            }
-            internal.is_video_editable = function (playlist_video) {
-                var title_element = playlist_video.querySelector(".w2g-list-item-title");
-                var original_title = playlist_video.getAttribute("w2g-original-title");
-                if (original_title !== null && helper.is_url(original_title))
-                    return true;
-                return helper.is_url(title_element.innerText);
-            };
-            return internal;
-        }());
-        sync.internal = internal;
-    })(sync = w2g.sync || (w2g.sync = {}));
-})(w2g || (w2g = {}));
+        internal.is_video_editable = function (playlist_video) {
+            var title_element = playlist_video.querySelector(".w2g-list-item-title");
+            var original_title = playlist_video.getAttribute("w2g-original-title");
+            if (original_title !== null && helper.is_url(original_title))
+                return true;
+            return helper.is_url(title_element.innerText);
+        };
+        return internal;
+    }());
+    w2gsync.internal = internal;
+})(w2gsync || (w2gsync = {}));
 (function () { return __awaiter(_this, void 0, void 0, function () {
     var applySettings, renameVideo, createEditControls, setOnChangeHandler, setRemoveHandler, _a, err_2;
+    var _this = this;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -173,10 +172,10 @@ var w2g;
                         var titleElement = playlistVideo.querySelector(".w2g-list-item-title");
                         var originalTitle = playlistVideo.getAttribute("w2g-original-title") || titleElement.innerText;
                         playlistVideo.setAttribute("w2g-original-title", originalTitle);
-                        var customTitleKey = Object.keys(w2g.sync.state_container.state.titles).find(function (x) { return x === originalTitle; });
+                        var customTitleKey = Object.keys(w2gsync.state_container.state.titles || {}).find(function (x) { return x === originalTitle; });
                         if (customTitleKey === undefined)
                             return "continue";
-                        titleElement.innerText = w2g.sync.state_container.state.titles[customTitleKey];
+                        titleElement.innerText = w2gsync.state_container.state.titles[customTitleKey];
                     };
                     for (var _i = 0, playlistVideos_1 = playlistVideos; _i < playlistVideos_1.length; _i++) {
                         var playlistVideo = playlistVideos_1[_i];
@@ -184,7 +183,7 @@ var w2g;
                     }
                 };
                 renameVideo = function (playlistVideo, title) {
-                    if (w2g.sync.helper.is_url(title)) {
+                    if (w2gsync.helper.is_url(title)) {
                         alert("retard alert");
                         return;
                     }
@@ -194,16 +193,16 @@ var w2g;
                         playlistVideo.setAttribute("w2g-original-title", titleElement.innerText);
                     if (title.length === 0)
                         title = originalTitle;
-                    w2g.sync.state_container.state.titles[originalTitle] = title;
+                    w2gsync.state_container.state.titles[originalTitle] = title;
                     titleElement.innerText = title;
-                    w2g.sync.api_client.set_title(originalTitle, title)["catch"](function (err) {
+                    w2gsync.api_client.set_title(originalTitle, title)["catch"](function (err) {
                         alert("Failed to rename video: " + err.message + "\nEdit sync settings to retry");
-                        w2g.sync.state_container.state.abort = true;
+                        w2gsync.state_container.state.abort = true;
                     });
                 };
                 createEditControls = function (playlistVideos) {
                     var _loop_2 = function (playlistVideo) {
-                        if (!w2g.sync.internal.is_video_editable(playlistVideo))
+                        if (!w2gsync.internal.is_video_editable(playlistVideo))
                             return "continue";
                         var titleElement = playlistVideo.querySelector(".w2g-list-item-title.mod-player");
                         var actionsElement = titleElement.parentElement.querySelector(".w2g-list-item-actions");
@@ -267,15 +266,15 @@ var w2g;
                 _b.label = 1;
             case 1:
                 _b.trys.push([1, 3, , 4]);
-                _a = w2g.sync.state_container.state;
-                return [4 /*yield*/, w2g.sync.api_client.get_titles()];
+                _a = w2gsync.state_container.state;
+                return [4 /*yield*/, w2gsync.api_client.get_titles()];
             case 2:
                 _a.titles = _b.sent();
                 return [3 /*break*/, 4];
             case 3:
                 err_2 = _b.sent();
                 alert("Failed to get titles: " + err_2.message + "\nEdit sync settings to retry");
-                w2g.sync.state_container.state.abort = true;
+                w2gsync.state_container.state.abort = true;
                 return [3 /*break*/, 4];
             case 4:
                 // ghetto retard shit
@@ -319,30 +318,57 @@ var w2g;
                     syncMenuTab.innerHTML = "\n<div class=\"ui fluid action input w2g-users\">\n    <input type=\"text\" id=\"w2g-sync-server-url\" placeholder=\"Sync server URL\"></input>\n</div>\n<div style=\"margin-top: 5px\" class=\"ui fluid action input w2g-users\">\n    <input type=\"password\" id=\"w2g-sync-server-token\" placeholder=\"Sync server token\"></input>\n</div>\n<div style=\"margin-top: 5px\" id=\"w2g-sync-server-save\" class=\"ui active button\">\n    <i class=\"save outline icon\"></i>\n    <span>Save</span>\n</div>\n";
                     var contentRight = document.querySelector(".w2g-content-right");
                     contentRight.appendChild(syncMenuTab);
-                    document.querySelector("#w2g-sync-server-url").value = w2g.sync.client_storage.get("server-url") || "";
-                    document.querySelector("#w2g-sync-server-token").value = w2g.sync.client_storage.get("server-token") || "";
+                    document.querySelector("#w2g-sync-server-url").value = w2gsync.client_storage.get("server-url") || "";
+                    document.querySelector("#w2g-sync-server-token").value = w2gsync.client_storage.get("server-token") || "";
                     var saveButton = document.querySelector("#w2g-sync-server-save");
-                    saveButton.onclick = function () {
-                        var serverUrl = document.querySelector("#w2g-sync-server-url");
-                        var serverToken = document.querySelector("#w2g-sync-server-token");
-                        w2g.sync.client_storage.set("server-url", serverUrl.value);
-                        w2g.sync.client_storage.set("server-token", serverToken.value);
-                        w2g.sync.state_container.state.abort = false;
-                    };
+                    saveButton.onclick = function () { return __awaiter(_this, void 0, void 0, function () {
+                        var serverUrl, serverToken, _a, err_3;
+                        return __generator(this, function (_b) {
+                            switch (_b.label) {
+                                case 0:
+                                    serverUrl = document.querySelector("#w2g-sync-server-url");
+                                    serverToken = document.querySelector("#w2g-sync-server-token");
+                                    w2gsync.client_storage.set("server-url", serverUrl.value);
+                                    w2gsync.client_storage.set("server-token", serverToken.value);
+                                    w2gsync.state_container.state.abort = false;
+                                    _b.label = 1;
+                                case 1:
+                                    _b.trys.push([1, 3, , 4]);
+                                    _a = w2gsync.state_container.state;
+                                    return [4 /*yield*/, w2gsync.api_client.get_titles()];
+                                case 2:
+                                    _a.titles = _b.sent();
+                                    return [3 /*break*/, 4];
+                                case 3:
+                                    err_3 = _b.sent();
+                                    alert("Failed to get titles: " + err_3.message + "\nEdit sync settings to retry");
+                                    w2gsync.state_container.state.abort = true;
+                                    return [3 /*break*/, 4];
+                                case 4: return [2 /*return*/];
+                            }
+                        });
+                    }); };
                     var playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
                     createEditControls(playlistVideos);
                     applySettings(playlistVideos);
                     setOnChangeHandler();
                     setRemoveHandler();
                     setInterval(function () {
-                        if (w2g.sync.state_container.state.abort)
+                        if (w2gsync.state_container.state.abort)
                             return;
-                        w2g.sync.api_client.get_titles()
-                            .then(function (titles) { return w2g.sync.state_container.state.titles = titles; })["catch"](function (err) {
+                        w2gsync.api_client.get_titles()
+                            .then(function (titles) { return w2gsync.state_container.state.titles = titles; })["catch"](function (err) {
                             alert("Failed to get titles: " + err.message + "\nEdit sync settings to retry");
-                            w2g.sync.state_container.state.abort = true;
+                            w2gsync.state_container.state.abort = true;
                         });
                     }, 5000);
+                    // setInterval(() => {
+                    //     const ok_button = document.querySelector("#ok_button");
+                    //     console.log(ok_button)
+                    //     if (ok_button !== null) {
+                    //         (ok_button as any).click();
+                    //     }
+                    // }, 150);
                     setInterval(function () {
                         var playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
                         applySettings(playlistVideos);
