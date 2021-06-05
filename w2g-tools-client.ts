@@ -24,10 +24,7 @@ namespace w2gsync {
     }
 
     export const default_state = () => ({ titles: {}, abort: false });
-
-    export class state_container {
-        public static readonly state: i_state = default_state();
-    }
+    export const state_container = default_state(); // TODO: Proper state management
 
     export class client_storage {
         private static readonly STORAGE_PREFIX: string = "_w2g-sync-";
@@ -60,6 +57,25 @@ namespace w2gsync {
             return await response.json();
         } catch (err) {
             throw new Error("Request failed: " + err.message);
+        }
+    }
+
+    export type notify_alerter = (message: string) => void;
+
+    export class notify_once {
+        private static readonly _notification_map: { [key: string]: boolean } = {};
+
+        public static notify(key: string, message: string, alerter: notify_alerter = alert): void {
+            if (this._notification_map.hasOwnProperty(key) && this._notification_map[key] === true)
+                return;
+            
+            alerter(message);
+            
+            this._notification_map[key] = true;
+        }
+
+        public static reset(key: string): void {
+            this._notification_map[key] = false;
         }
     }
 
@@ -102,11 +118,11 @@ namespace w2gsync {
             const originalTitle = playlistVideo.getAttribute("w2g-original-title") || titleElement.innerText;
             playlistVideo.setAttribute("w2g-original-title", originalTitle);
 
-            const customTitleKey = Object.keys(w2gsync.state_container.state.titles || {}).find(x => x === originalTitle);
+            const customTitleKey = Object.keys(w2gsync.state_container.titles || {}).find(x => x === originalTitle);
             if (customTitleKey === undefined)
                 continue;
 
-            titleElement.innerText = w2gsync.state_container.state.titles[customTitleKey];
+            titleElement.innerText = w2gsync.state_container.titles[customTitleKey];
         }
     };
 
@@ -125,14 +141,14 @@ namespace w2gsync {
         if (title.length === 0)
             title = originalTitle;
 
-        w2gsync.state_container.state.titles[originalTitle] = title;
+        w2gsync.state_container.titles[originalTitle] = title;
 
         titleElement.innerText = title;
 
         w2gsync.api_client.set_title(originalTitle, title)
             .catch(err => {
                 alert("Failed to rename video: " + err.message + "\nEdit sync settings to retry");
-                w2gsync.state_container.state.abort = true;
+                w2gsync.state_container.abort = true;
             });
     };
 
@@ -211,10 +227,11 @@ namespace w2gsync {
     };
 
     try {
-        w2gsync.state_container.state.titles = await w2gsync.api_client.get_titles();
+        w2gsync.state_container.titles = await w2gsync.api_client.get_titles();
+        w2gsync.notify_once.reset("titles_fetch_error");
     } catch (err) {
-        alert("Failed to get titles: " + err.message + "\nEdit sync settings to retry");
-        w2gsync.state_container.state.abort = true;
+        w2gsync.notify_once.notify("titles_fetch_error", `Failed to get titles: ${err.message}\nEdit sync settings to retry`);
+        w2gsync.state_container.abort = true;
     }
 
     // ghetto retard shit
@@ -287,13 +304,14 @@ namespace w2gsync {
             const serverToken = document.querySelector("#w2g-sync-server-token") as any;
             w2gsync.client_storage.set("server-url", serverUrl.value);
             w2gsync.client_storage.set("server-token", serverToken.value);
-            w2gsync.state_container.state.abort = false;
-            
+            w2gsync.state_container.abort = false;
+
             try {
-                w2gsync.state_container.state.titles = await w2gsync.api_client.get_titles();
+                w2gsync.state_container.titles = await w2gsync.api_client.get_titles();
+                w2gsync.notify_once.reset("titles_fetch_error");
             } catch (err) {
-                alert("Failed to get titles: " + err.message + "\nEdit sync settings to retry");
-                w2gsync.state_container.state.abort = true;
+                w2gsync.notify_once.notify("titles_fetch_error", `Failed to get titles: ${err.message}\nEdit sync settings to retry`);
+                w2gsync.state_container.abort = true;
             }
         };
 
@@ -304,13 +322,16 @@ namespace w2gsync {
         setRemoveHandler();
 
         setInterval(() => {
-            if (w2gsync.state_container.state.abort) return;
+            if (w2gsync.state_container.abort) return;
 
             w2gsync.api_client.get_titles()
-                .then(titles => w2gsync.state_container.state.titles = titles)
+                .then(titles => {
+                    w2gsync.state_container.titles = titles;
+                    w2gsync.notify_once.reset("titles_fetch_error");
+                })
                 .catch(err => {
-                    alert("Failed to get titles: " + err.message + "\nEdit sync settings to retry");
-                    w2gsync.state_container.state.abort = true;
+                    w2gsync.notify_once.notify("titles_fetch_error", `Failed to get titles: ${err.message}\nEdit sync settings to retry`);
+                    w2gsync.state_container.abort = true;
                 });
         }, 5000);
 
