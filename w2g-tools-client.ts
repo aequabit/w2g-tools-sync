@@ -60,12 +60,23 @@ namespace w2gsync {
         }
     }
 
+    export async function wait_for(conditional: () => boolean, interval: number = 200): Promise<void> {
+        return new Promise(resolve => {
+            const _wait_for_interval = setInterval(() => {
+                if (conditional() === true) {
+                    clearInterval(_wait_for_interval);
+                    resolve();
+                }
+            }, interval);
+        });
+    }
+
     export type notify_alerter = (message: string) => void;
 
     export class notify_once {
         private static readonly _notification_map: { [key: string]: boolean } = {};
 
-        public static notify(key: string, message: string, alerter: notify_alerter = alert): void {
+        public static notify(key: string, message: string, alerter: notify_alerter = /*alert*/() => {}): void {
             if (this._notification_map.hasOwnProperty(key) && this._notification_map[key] === true)
                 return;
             
@@ -234,10 +245,26 @@ namespace w2gsync {
         w2gsync.state_container.abort = true;
     }
 
+    document.addEventListener("contextmenu", (e: MouseEvent) => {
+        const playlist_video_element = e.target as HTMLDivElement;
+        if (!(playlist_video_element instanceof HTMLDivElement))
+            return;
+        console.log(playlist_video_element.classList);
+
+        if (playlist_video_element.tagName.toLowerCase() !== "div")
+            return;
+        if (playlist_video_element.classList.contains("w2g-list-item") || playlist_video_element.classList.contains("w2g-list-item-title"))
+            return;
+        
+        console.log(playlist_video_element);
+    }, false);
+
     // ghetto retard shit
-    setTimeout(() => {
+    setTimeout(async () => {
         // Create scroll down control
         const menu = document.querySelectorAll(".w2g-menu")[3];
+
+        await w2gsync.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
 
         const scrollUpButton = document.createElement("div");
         scrollUpButton.className = "mod_pl_interaction";

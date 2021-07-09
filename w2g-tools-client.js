@@ -56,8 +56,21 @@ var w2gsync;
         });
     }
     w2gsync.http_request = http_request;
+    function wait_for(conditional, interval = 200) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise(resolve => {
+                const _wait_for_interval = setInterval(() => {
+                    if (conditional() === true) {
+                        clearInterval(_wait_for_interval);
+                        resolve();
+                    }
+                }, interval);
+            });
+        });
+    }
+    w2gsync.wait_for = wait_for;
     class notify_once {
-        static notify(key, message, alerter = alert) {
+        static notify(key, message, alerter = () => { }) {
             if (this._notification_map.hasOwnProperty(key) && this._notification_map[key] === true)
                 return;
             alerter(message);
@@ -190,10 +203,22 @@ var w2gsync;
         w2gsync.notify_once.notify("titles_fetch_error", `Failed to get titles: ${err.message}\nEdit sync settings to retry`);
         w2gsync.state_container.abort = true;
     }
+    document.addEventListener("contextmenu", (e) => {
+        const playlist_video_element = e.target;
+        if (!(playlist_video_element instanceof HTMLDivElement))
+            return;
+        console.log(playlist_video_element.classList);
+        if (playlist_video_element.tagName.toLowerCase() !== "div")
+            return;
+        if (playlist_video_element.classList.contains("w2g-list-item") || playlist_video_element.classList.contains("w2g-list-item-title"))
+            return;
+        console.log(playlist_video_element);
+    }, false);
     // ghetto retard shit
-    setTimeout(() => {
+    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
         // Create scroll down control
         const menu = document.querySelectorAll(".w2g-menu")[3];
+        yield w2gsync.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
         const scrollUpButton = document.createElement("div");
         scrollUpButton.className = "mod_pl_interaction";
         scrollUpButton.setAttribute("title", "Skip to top");
@@ -290,5 +315,5 @@ var w2gsync;
             applySettings(playlistVideos);
             createEditControls(playlistVideos);
         }, 2500);
-    }, 2500);
+    }), 2500);
 }))();
