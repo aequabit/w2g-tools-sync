@@ -1,2 +1,0 @@
-- Mark watch progress for individual users
-- Remove video rename feature (w2g now natively supports this)

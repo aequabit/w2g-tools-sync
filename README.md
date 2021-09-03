@@ -1,22 +1,9 @@
-# watch2gether Tools Sync Server
+# watch2gether Tools ~~Sync Server~~
+
+Watch2Gether directly added the option to rename videos ([here](https://community.w2g.tv/t/ability-to-rename-urls/145190/4?u=user_819f05c0d64e608)). Thanks to [Florian](https://community.w2g.tv/u/user_95f53b7185f71fb) for the great communication!
 
 ## Features
 - Buttons to skip to the top/bottom of a playlist
-- Renaming videos added by direct URL (start with http:// or https://)
-- Syncs in real-time with users that have the Tampermonkey script installed
-
-## Installation
-- Deploy `sync-server/` to www root
-- Give read/write permissions to `data/`
-- Set a token in `index.php`
-- Set the server URL and token under the `Sync` tab in the watch2gether sidebar
-- Install Tampermonkey and distribute the script and token to your friends!
-
-## To do
-- Create groups assignable to rooms (i.e. room a and b use list 1 but room c uses list 3)
-- Assign groups to token (i.e. token 683d556f-2d49-4c6c-a274-2864e26a5b23 has access to group a and b)
-- Support for multiple servers
-- List addresses? (i.e. my-cool-room@my-sync-server.com:683d556f-2d49-4c6c-a274-2864e26a5b23)
 
 ## Bugs / features
 For bug reports or feature requests open an issue, reply to the [High-Minded thread](https://hm.cx/threads/80031) or write me an email to `contact [at] aequabit.de`

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         watch2gether Tools
-// @version      1.1
+// @version      2.0
 // @description  yeet
 // @author       aequabit
 // @match 		 *://w2g.tv/*
@@ -15,47 +15,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var w2gsync;
-(function (w2gsync) {
-    w2gsync.result = Promise;
-    ;
-    class helper {
-        static is_url(str) {
-            return typeof str === "string" && (str.startsWith("http://") || str.startsWith("https://"));
-        }
-    }
-    w2gsync.helper = helper;
-    w2gsync.default_state = () => ({ titles: {}, abort: false });
-    w2gsync.state_container = w2gsync.default_state(); // TODO: Proper state management
-    class client_storage {
-        static get(key) {
-            return localStorage.getItem(client_storage.STORAGE_PREFIX + key);
-        }
-        static set(key, value) {
-            localStorage.setItem(client_storage.STORAGE_PREFIX + key, value.toString());
-        }
-    }
-    client_storage.STORAGE_PREFIX = "_w2g-sync-";
-    w2gsync.client_storage = client_storage;
-    function http_request(url, query = null) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const sync_server_url = client_storage.get("server-url");
-            const sync_server_token = client_storage.get("server-token");
-            if (sync_server_url === null || sync_server_token === null)
-                throw new Error("Sync server not configured");
-            try {
-                const response = yield fetch(sync_server_url + url + (query !== null ? `?${new URLSearchParams(query)}` : ""), {
-                    method: 'GET',
-                    headers: Object.assign({ 'x-sync-token': sync_server_token }, (query !== null ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}))
-                });
-                return yield response.json();
-            }
-            catch (err) {
-                throw new Error("Request failed: " + err.message);
-            }
-        });
-    }
-    w2gsync.http_request = http_request;
+var w2gtools;
+(function (w2gtools) {
     function wait_for(conditional, interval = 200) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise(resolve => {
@@ -68,157 +29,14 @@ var w2gsync;
             });
         });
     }
-    w2gsync.wait_for = wait_for;
-    class notify_once {
-        static notify(key, message, alerter = () => { }) {
-            if (this._notification_map.hasOwnProperty(key) && this._notification_map[key] === true)
-                return;
-            alerter(message);
-            this._notification_map[key] = true;
-        }
-        static reset(key) {
-            this._notification_map[key] = false;
-        }
-    }
-    notify_once._notification_map = {};
-    w2gsync.notify_once = notify_once;
-    class api_client {
-        static get_titles() {
-            return __awaiter(this, void 0, void 0, function* () {
-                return (yield http_request("/playlist/get-titles")).titles;
-            });
-        }
-        static set_title(url, title) {
-            return __awaiter(this, void 0, void 0, function* () {
-                return yield http_request("/playlist/set-title", { url, title });
-            });
-        }
-    }
-    w2gsync.api_client = api_client;
-    class internal {
-        static is_video_editable(playlist_video) {
-            const title_element = playlist_video.querySelector(".w2g-list-item-title");
-            const original_title = playlist_video.getAttribute("w2g-original-title");
-            if (original_title !== null && helper.is_url(original_title))
-                return true;
-            return helper.is_url(title_element.innerText);
-        }
-    }
-    w2gsync.internal = internal;
-})(w2gsync || (w2gsync = {}));
+    w2gtools.wait_for = wait_for;
+})(w2gtools || (w2gtools = {}));
 (() => __awaiter(this, void 0, void 0, function* () {
-    const applySettings = playlistVideos => {
-        for (const playlistVideo of playlistVideos) {
-            if (!(playlistVideo))
-                continue;
-            const titleElement = playlistVideo.querySelector(".w2g-list-item-title");
-            const originalTitle = playlistVideo.getAttribute("w2g-original-title") || titleElement.innerText;
-            playlistVideo.setAttribute("w2g-original-title", originalTitle);
-            const customTitleKey = Object.keys(w2gsync.state_container.titles || {}).find(x => x === originalTitle);
-            if (customTitleKey === undefined)
-                continue;
-            titleElement.innerText = w2gsync.state_container.titles[customTitleKey];
-        }
-    };
-    const renameVideo = (playlistVideo, title) => {
-        if (w2gsync.helper.is_url(title)) {
-            alert("retard alert");
-            return;
-        }
-        const titleElement = playlistVideo.querySelector(".w2g-list-item-title");
-        const originalTitle = playlistVideo.getAttribute("w2g-original-title");
-        if (originalTitle === null)
-            playlistVideo.setAttribute("w2g-original-title", titleElement.innerText);
-        if (title.length === 0)
-            title = originalTitle;
-        w2gsync.state_container.titles[originalTitle] = title;
-        titleElement.innerText = title;
-        w2gsync.api_client.set_title(originalTitle, title)
-            .catch(err => {
-            alert("Failed to rename video: " + err.message + "\nEdit sync settings to retry");
-            w2gsync.state_container.abort = true;
-        });
-    };
-    const createEditControls = playlistVideos => {
-        for (const playlistVideo of playlistVideos) {
-            if (!w2gsync.internal.is_video_editable(playlistVideo))
-                continue;
-            const titleElement = playlistVideo.querySelector(".w2g-list-item-title.mod-player");
-            const actionsElement = titleElement.parentElement.querySelector(".w2g-list-item-actions");
-            if (actionsElement === null)
-                continue;
-            if (actionsElement.querySelector(".w2g-title-edit") !== null)
-                continue;
-            const editButton = document.createElement("a");
-            editButton.className = "w2g-title-edit";
-            editButton.style = "margin-right: 5px;";
-            editButton.href = "#";
-            editButton.innerText = "edit";
-            editButton.onclick = (e) => renameVideo(e.target.parentElement.parentElement, prompt("New title:", titleElement.innerText));
-            actionsElement.prepend(editButton);
-        }
-    };
-    const setOnChangeHandler = () => {
-        let dragged = null;
-        document.addEventListener("dragstart", e => {
-            dragged = e.target;
-        }, false);
-        document.addEventListener("drop", e => {
-            // const originalTitle = dragged.getAttribute("w2g-original-title");
-            // if (originalTitle !== null)
-            //     return;
-            // const titleElement = dragged.querySelector(".w2g-list-item-title");
-            // if (!titleElement.innerText.startsWith("http://") && !titleElement.innerText.startsWith("https://"))
-            //     return;
-            // const customTitle = localStorage.getItem(`_title_${hex(titleElement.innerText)}`);
-            // if (customTitle === null)
-            //     return;
-            // titleElement.innerText = customTitle;
-            // ghetto shit
-            setTimeout(() => {
-                const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
-                applySettings(playlistVideos);
-                createEditControls(playlistVideos);
-            }, 500);
-        }, false);
-    };
-    const setRemoveHandler = () => {
-        for (const deleteButton of document.querySelectorAll(".ui.remove.icon[title='Delete']")) {
-            deleteButton.onclick = e => {
-                setTimeout(() => {
-                    const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
-                    applySettings(playlistVideos);
-                    createEditControls(playlistVideos);
-                }, 500);
-                // const playlistVideo = e.target.parentElement.parentElement;
-                // const titleElement = playlistVideo.querySelector(".w2g-list-item-title.mod-player");
-            };
-        }
-    };
-    try {
-        w2gsync.state_container.titles = yield w2gsync.api_client.get_titles();
-        w2gsync.notify_once.reset("titles_fetch_error");
-    }
-    catch (err) {
-        w2gsync.notify_once.notify("titles_fetch_error", `Failed to get titles: ${err.message}\nEdit sync settings to retry`);
-        w2gsync.state_container.abort = true;
-    }
-    document.addEventListener("contextmenu", (e) => {
-        const playlist_video_element = e.target;
-        if (!(playlist_video_element instanceof HTMLDivElement))
-            return;
-        console.log(playlist_video_element.classList);
-        if (playlist_video_element.tagName.toLowerCase() !== "div")
-            return;
-        if (playlist_video_element.classList.contains("w2g-list-item") || playlist_video_element.classList.contains("w2g-list-item-title"))
-            return;
-        console.log(playlist_video_element);
-    }, false);
     // ghetto retard shit
     setTimeout(() => __awaiter(this, void 0, void 0, function* () {
         // Create scroll down control
         const menu = document.querySelectorAll(".w2g-menu")[3];
-        yield w2gsync.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
+        yield w2gtools.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
         const scrollUpButton = document.createElement("div");
         scrollUpButton.className = "mod_pl_interaction";
         scrollUpButton.setAttribute("title", "Skip to top");
@@ -240,80 +58,5 @@ var w2gsync;
         scrollDownButton.appendChild(downIcon);
         menu.appendChild(scrollUpButton);
         menu.appendChild(scrollDownButton);
-        // Create sync tab
-        const syncMenuItem = document.createElement("div");
-        syncMenuItem.classList.add("w2g-sync-menu-item");
-        syncMenuItem.innerText = "Sync";
-        syncMenuItem.onclick = (e) => {
-            if (e.target.classList.contains("w2g-active"))
-                return;
-            e.target.classList.add("w2g-active");
-        };
-        const sidebarMenu = document.querySelector("#w2g-sidebar-menu");
-        sidebarMenu.appendChild(syncMenuItem);
-        const syncMenuTab = document.createElement("div");
-        syncMenuTab.classList.add("w2g-menu-tab", "w2g-sync", "w2g-scroll-vertical");
-        syncMenuTab.innerHTML = `
-<div class="ui fluid action input w2g-users">
-    <input type="text" id="w2g-sync-server-url" placeholder="Sync server URL"></input>
-</div>
-<div style="margin-top: 5px" class="ui fluid action input w2g-users">
-    <input type="password" id="w2g-sync-server-token" placeholder="Sync server token"></input>
-</div>
-<div style="margin-top: 5px" id="w2g-sync-server-save" class="ui active button">
-    <i class="save outline icon"></i>
-    <span>Save</span>
-</div>
-`;
-        const contentRight = document.querySelector(".w2g-content-right");
-        contentRight.appendChild(syncMenuTab);
-        document.querySelector("#w2g-sync-server-url").value = w2gsync.client_storage.get("server-url") || "";
-        document.querySelector("#w2g-sync-server-token").value = w2gsync.client_storage.get("server-token") || "";
-        const saveButton = document.querySelector("#w2g-sync-server-save");
-        saveButton.onclick = () => __awaiter(this, void 0, void 0, function* () {
-            const serverUrl = document.querySelector("#w2g-sync-server-url");
-            const serverToken = document.querySelector("#w2g-sync-server-token");
-            w2gsync.client_storage.set("server-url", serverUrl.value);
-            w2gsync.client_storage.set("server-token", serverToken.value);
-            w2gsync.state_container.abort = false;
-            try {
-                w2gsync.state_container.titles = yield w2gsync.api_client.get_titles();
-                w2gsync.notify_once.reset("titles_fetch_error");
-            }
-            catch (err) {
-                w2gsync.notify_once.notify("titles_fetch_error", `Failed to get titles: ${err.message}\nEdit sync settings to retry`);
-                w2gsync.state_container.abort = true;
-            }
-        });
-        const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
-        createEditControls(playlistVideos);
-        applySettings(playlistVideos);
-        setOnChangeHandler();
-        setRemoveHandler();
-        setInterval(() => {
-            if (w2gsync.state_container.abort)
-                return;
-            w2gsync.api_client.get_titles()
-                .then(titles => {
-                w2gsync.state_container.titles = titles;
-                w2gsync.notify_once.reset("titles_fetch_error");
-            })
-                .catch(err => {
-                w2gsync.notify_once.notify("titles_fetch_error", `Failed to get titles: ${err.message}\nEdit sync settings to retry`);
-                w2gsync.state_container.abort = true;
-            });
-        }, 5000);
-        // setInterval(() => {
-        //     const ok_button = document.querySelector("#ok_button");
-        //     console.log(ok_button)
-        //     if (ok_button !== null) {
-        //         (ok_button as any).click();
-        //     }
-        // }, 150);
-        setInterval(() => {
-            const playlistVideos = document.querySelectorAll(".w2g-list-item.darker-item.mod_pl_drag");
-            applySettings(playlistVideos);
-            createEditControls(playlistVideos);
-        }, 2500);
     }), 2500);
 }))();
