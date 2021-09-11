@@ -37,41 +37,11 @@ namespace w2gtools {
 }
 
 (async () => {
-    // Wait for volume slider
-    await w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null, 250);
-    await w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null || document.querySelector("#video_container>audio") !== null, 250);
-
-    const volume_slider: HTMLInputElement = document.querySelector("#volume_slider");
-    const video_element: HTMLVideoElement = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
-
-    video_element.onvolumechange = e => {
-        if (!(e.target instanceof HTMLVideoElement) && !(e.target instanceof HTMLAudioElement)) return;
-        const _video_element: HTMLVideoElement | HTMLAudioElement = e.target;
-        w2gtools.client_storage.set("player_volume", _video_element.volume.toString());
-    };
-
-    const player_volume_str = w2gtools.client_storage.get("player_volume");
-    const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
-    volume_slider.value = Math.trunc(player_volume * 100).toString();
-    video_element.volume = player_volume;
-
-    setInterval(() => {
-        const _volume_slider: HTMLInputElement = document.querySelector("#volume_slider");
-        const _video_element: HTMLVideoElement = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
-        const player_volume_str = w2gtools.client_storage.get("player_volume");
-        const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
-        if (_video_element.volume !== player_volume) {
-            _volume_slider.value = Math.trunc(player_volume * 100).toString();
-            _video_element.volume = player_volume;
-        }
-    }, 250);
-
-    // ghetto retard shit
     setTimeout(async () => {
+        await w2gtools.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
+
         // Create scroll down control
         const menu = document.querySelectorAll(".w2g-menu")[3];
-
-        await w2gtools.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
 
         const scrollUpButton = document.createElement("div");
         scrollUpButton.className = "mod_pl_interaction";
@@ -96,5 +66,36 @@ namespace w2gtools {
 
         menu.appendChild(scrollUpButton);
         menu.appendChild(scrollDownButton);
-    }, 2500);
+    }, 1);
+
+    setTimeout(async () => {
+        // Wait for volume slider
+        await w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null);
+        await w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null || document.querySelector("#video_container>audio") !== null);
+
+        const volume_slider: HTMLInputElement = document.querySelector("#volume_slider");
+        const video_element: HTMLVideoElement = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
+
+        video_element.onvolumechange = e => {
+            if (!(e.target instanceof HTMLVideoElement) && !(e.target instanceof HTMLAudioElement)) return;
+            const _video_element: HTMLVideoElement | HTMLAudioElement = e.target;
+            w2gtools.client_storage.set("player_volume", _video_element.volume.toString());
+        };
+
+        const player_volume_str = w2gtools.client_storage.get("player_volume");
+        const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
+        volume_slider.value = Math.trunc(player_volume * 100).toString();
+        video_element.volume = player_volume;
+
+        setInterval(() => {
+            const _volume_slider: HTMLInputElement = document.querySelector("#volume_slider");
+            const _video_element: HTMLVideoElement = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
+            const player_volume_str = w2gtools.client_storage.get("player_volume");
+            const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
+            if (_video_element.volume !== player_volume) {
+                _volume_slider.value = Math.trunc(player_volume * 100).toString();
+                _video_element.volume = player_volume;
+            }
+        }, 250);
+    }, 1);
 })();

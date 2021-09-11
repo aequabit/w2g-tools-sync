@@ -45,37 +45,10 @@ var w2gtools;
     w2gtools.client_storage = client_storage;
 })(w2gtools || (w2gtools = {}));
 (() => __awaiter(this, void 0, void 0, function* () {
-    // Wait for volume slider
-    yield w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null, 250);
-    yield w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null || document.querySelector("#video_container>audio") !== null, 250);
-    const volume_slider = document.querySelector("#volume_slider");
-    const video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
-    video_element.onvolumechange = e => {
-        if (!(e.target instanceof HTMLVideoElement) && !(e.target instanceof HTMLAudioElement))
-            return;
-        const _video_element = e.target;
-        w2gtools.client_storage.set("player_volume", _video_element.volume.toString());
-        console.log(_video_element.volume);
-    };
-    const player_volume_str = w2gtools.client_storage.get("player_volume");
-    const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
-    volume_slider.value = Math.trunc(player_volume * 100).toString();
-    video_element.volume = player_volume;
-    setInterval(() => {
-        const _volume_slider = document.querySelector("#volume_slider");
-        const _video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
-        const player_volume_str = w2gtools.client_storage.get("player_volume");
-        const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
-        if (_video_element.volume !== player_volume) {
-            _volume_slider.value = Math.trunc(player_volume * 100).toString();
-            _video_element.volume = player_volume;
-        }
-    }, 250);
-    // ghetto retard shit
     setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+        yield w2gtools.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
         // Create scroll down control
         const menu = document.querySelectorAll(".w2g-menu")[3];
-        yield w2gtools.wait_for(() => document.querySelectorAll(".w2g-menu")[3] !== undefined);
         const scrollUpButton = document.createElement("div");
         scrollUpButton.className = "mod_pl_interaction";
         scrollUpButton.setAttribute("title", "Skip to top");
@@ -97,5 +70,32 @@ var w2gtools;
         scrollDownButton.appendChild(downIcon);
         menu.appendChild(scrollUpButton);
         menu.appendChild(scrollDownButton);
-    }), 2500);
+    }), 1);
+    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+        // Wait for volume slider
+        yield w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null);
+        yield w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null || document.querySelector("#video_container>audio") !== null);
+        const volume_slider = document.querySelector("#volume_slider");
+        const video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
+        video_element.onvolumechange = e => {
+            if (!(e.target instanceof HTMLVideoElement) && !(e.target instanceof HTMLAudioElement))
+                return;
+            const _video_element = e.target;
+            w2gtools.client_storage.set("player_volume", _video_element.volume.toString());
+        };
+        const player_volume_str = w2gtools.client_storage.get("player_volume");
+        const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
+        volume_slider.value = Math.trunc(player_volume * 100).toString();
+        video_element.volume = player_volume;
+        setInterval(() => {
+            const _volume_slider = document.querySelector("#volume_slider");
+            const _video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
+            const player_volume_str = w2gtools.client_storage.get("player_volume");
+            const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
+            if (_video_element.volume !== player_volume) {
+                _volume_slider.value = Math.trunc(player_volume * 100).toString();
+                _video_element.volume = player_volume;
+            }
+        }, 250);
+    }), 1);
 }))();
