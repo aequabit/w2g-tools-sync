@@ -18,6 +18,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var w2gtools;
 (function (w2gtools) {
     w2gtools.DEFAULT_PLAYER_VOLUME = 0.3;
+    // TODO: Specify for elements
+    // TODO: Save selectors and promises, check all in single loop
     function wait_for(conditional, interval = 200) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise(resolve => {
@@ -45,11 +47,11 @@ var w2gtools;
 (() => __awaiter(this, void 0, void 0, function* () {
     // Wait for volume slider
     yield w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null, 250);
-    yield w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null, 250);
+    yield w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null || document.querySelector("#video_container>audio") !== null, 250);
     const volume_slider = document.querySelector("#volume_slider");
-    const video_element = document.querySelector("#video_container>video");
+    const video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
     video_element.onvolumechange = e => {
-        if (!(e.target instanceof HTMLVideoElement))
+        if (!(e.target instanceof HTMLVideoElement) && !(e.target instanceof HTMLAudioElement))
             return;
         const _video_element = e.target;
         w2gtools.client_storage.set("player_volume", _video_element.volume.toString());
@@ -61,7 +63,7 @@ var w2gtools;
     video_element.volume = player_volume;
     setInterval(() => {
         const _volume_slider = document.querySelector("#volume_slider");
-        const _video_element = document.querySelector("#video_container>video");
+        const _video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
         const player_volume_str = w2gtools.client_storage.get("player_volume");
         const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
         if (_video_element.volume !== player_volume) {

@@ -39,17 +39,15 @@ namespace w2gtools {
 (async () => {
     // Wait for volume slider
     await w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null, 250);
-    await w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null, 250);
+    await w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null || document.querySelector("#video_container>audio") !== null, 250);
 
     const volume_slider: HTMLInputElement = document.querySelector("#volume_slider");
-    const video_element: HTMLVideoElement = document.querySelector("#video_container>video");
+    const video_element: HTMLVideoElement = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
 
     video_element.onvolumechange = e => {
-        if (!(e.target instanceof HTMLVideoElement)) return;
-        const _video_element: HTMLVideoElement = e.target;
+        if (!(e.target instanceof HTMLVideoElement) && !(e.target instanceof HTMLAudioElement)) return;
+        const _video_element: HTMLVideoElement | HTMLAudioElement = e.target;
         w2gtools.client_storage.set("player_volume", _video_element.volume.toString());
-        console.log(_video_element.volume)
-
     };
 
     const player_volume_str = w2gtools.client_storage.get("player_volume");
@@ -59,7 +57,7 @@ namespace w2gtools {
 
     setInterval(() => {
         const _volume_slider: HTMLInputElement = document.querySelector("#volume_slider");
-        const _video_element: HTMLVideoElement = document.querySelector("#video_container>video");
+        const _video_element: HTMLVideoElement = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
         const player_volume_str = w2gtools.client_storage.get("player_volume");
         const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
         if (_video_element.volume !== player_volume) {
