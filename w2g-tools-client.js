@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         watch2gether Tools
-// @version      2.0
+// @version      2.1
 // @description  yeet
 // @author       aequabit
 // @match 		 *://w2g.tv/*
@@ -17,6 +17,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 var w2gtools;
 (function (w2gtools) {
+    w2gtools.DEFAULT_PLAYER_VOLUME = 0.3;
     function wait_for(conditional, interval = 200) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise(resolve => {
@@ -30,8 +31,44 @@ var w2gtools;
         });
     }
     w2gtools.wait_for = wait_for;
+    class client_storage {
+        static get(key) {
+            return localStorage.getItem(client_storage.STORAGE_PREFIX + key);
+        }
+        static set(key, value) {
+            localStorage.setItem(client_storage.STORAGE_PREFIX + key, value.toString());
+        }
+    }
+    client_storage.STORAGE_PREFIX = "_w2g-sync-";
+    w2gtools.client_storage = client_storage;
 })(w2gtools || (w2gtools = {}));
 (() => __awaiter(this, void 0, void 0, function* () {
+    // Wait for volume slider
+    yield w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null, 250);
+    yield w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null, 250);
+    const volume_slider = document.querySelector("#volume_slider");
+    const video_element = document.querySelector("#video_container>video");
+    video_element.onvolumechange = e => {
+        if (!(e.target instanceof HTMLVideoElement))
+            return;
+        const _video_element = e.target;
+        w2gtools.client_storage.set("player_volume", _video_element.volume.toString());
+        console.log(_video_element.volume);
+    };
+    const player_volume_str = w2gtools.client_storage.get("player_volume");
+    const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
+    volume_slider.value = Math.trunc(player_volume * 100).toString();
+    video_element.volume = player_volume;
+    setInterval(() => {
+        const _volume_slider = document.querySelector("#volume_slider");
+        const _video_element = document.querySelector("#video_container>video");
+        const player_volume_str = w2gtools.client_storage.get("player_volume");
+        const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
+        if (_video_element.volume !== player_volume) {
+            _volume_slider.value = Math.trunc(player_volume * 100).toString();
+            _video_element.volume = player_volume;
+        }
+    }, 250);
     // ghetto retard shit
     setTimeout(() => __awaiter(this, void 0, void 0, function* () {
         // Create scroll down control

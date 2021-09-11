@@ -4,6 +4,7 @@ Watch2Gether directly added the option to rename videos ([here](https://communit
 
 ## Features
 - Buttons to skip to the top/bottom of a playlist
+- Remember volume level for the new player
 
 ## Bugs / features
 For bug reports or feature requests open an issue, reply to the [High-Minded thread](https://hm.cx/threads/80031) or write me an email to `contact [at] aequabit.de`
