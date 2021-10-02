@@ -20,7 +20,7 @@ var w2gtools;
     w2gtools.DEFAULT_PLAYER_VOLUME = 0.3;
     // TODO: Specify for elements
     // TODO: Save selectors and promises, check all in single loop
-    function wait_for(conditional, interval = 200) {
+    function wait_for(conditional, interval = 20) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise(resolve => {
                 const _wait_for_interval = setInterval(() => {
@@ -73,10 +73,11 @@ var w2gtools;
     }), 1);
     setTimeout(() => __awaiter(this, void 0, void 0, function* () {
         // Wait for volume slider
-        yield w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null);
+        yield w2gtools.wait_for(() => document.querySelector("#volume_slider") !== null || document.querySelector(".player-volume>div>input") !== null);
         yield w2gtools.wait_for(() => document.querySelector("#video_container>video") !== null || document.querySelector("#video_container>audio") !== null);
-        const volume_slider = document.querySelector("#volume_slider");
+        const volume_slider = document.querySelector("#volume_slider") || document.querySelector(".player-volume>div>input");
         const video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
+        console.log(volume_slider);
         video_element.onvolumechange = e => {
             if (!(e.target instanceof HTMLVideoElement) && !(e.target instanceof HTMLAudioElement))
                 return;
@@ -88,7 +89,7 @@ var w2gtools;
         volume_slider.value = Math.trunc(player_volume * 100).toString();
         video_element.volume = player_volume;
         setInterval(() => {
-            const _volume_slider = document.querySelector("#volume_slider");
+            const _volume_slider = document.querySelector("#volume_slider") || document.querySelector(".player-volume>div>input");
             const _video_element = document.querySelector("#video_container>video") || document.querySelector("#video_container>audio");
             const player_volume_str = w2gtools.client_storage.get("player_volume");
             const player_volume = player_volume_str === null ? w2gtools.DEFAULT_PLAYER_VOLUME : parseFloat(player_volume_str);
